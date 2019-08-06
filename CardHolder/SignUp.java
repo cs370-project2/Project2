@@ -1,9 +1,15 @@
 package CardHolder;
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -83,6 +89,12 @@ public class SignUp extends JFrame {
 		passwordField_1.setBounds(183, 393, 179, 35);
 		getContentPane().add(passwordField_1);
 		
+		JLabel loginMsg = new JLabel("");
+		loginMsg.setFont(new Font("Sylfaen", Font.PLAIN, 15));
+		loginMsg.setForeground(Color.red);
+		loginMsg.setBounds(120, 450, 500, 26);
+		getContentPane().add(loginMsg);
+		
 		JButton activate = new JButton("Activate Account!");
 		activate.setFont(new Font("Sylfaen", Font.PLAIN, 16));
 		activate.addActionListener(new ActionListener() {
@@ -102,23 +114,29 @@ public class SignUp extends JFrame {
 				if(checkCC(cCard)) {		//first check if creditcard is already in DB? check if that is a reasonable 
 					if(pWord.equals(pWord1)) {
 						if(checkPWord(pWord)) {
-							System.out.println("Your username is : " + uName + "your password is : " + pWord);
+							
+							
+							if (activate(Integer.valueOf(cCard), uName, pWord)) {
+								loginMsg.setText("Account created successfully");
+							} else {
+								loginMsg.setText("There was a problem creating account. see log for information");
+							}
 							/*
 							 * SAVE uName IN DB
 							 * SAVE pWord IN DB
 							 * set activated = true IN DB
 							 * create Account object
 							 */
-							Account acnt = new Account();
+							Account acnt = new Account(cCard);
 							acnt.setVisible(true);
 							dispose();
 							
 						}else
-							JOptionPane.showMessageDialog(null, "That password is not alpanumeric " + "\n or is less than 6 characters." + pWord);
+							loginMsg.setText("That password is not alpanumeric or is less than 6 characters.");
 					}else
-						JOptionPane.showMessageDialog(null, "Passwords don't match.");
+						loginMsg.setText("Passwords don't match.");
 				}else
-					JOptionPane.showMessageDialog(null,"CRedit card is invalid");
+					loginMsg.setText("Card number doesn't exist or is not 4 digits.");
 					
 			}
 		});
@@ -156,17 +174,57 @@ public class SignUp extends JFrame {
 	}
 	
 	public boolean checkCC(String f) {
-		if(f.length() != 4) {
-			System.out.println("Credit card number is not four dgits.");
-			return false;
-		}else 
+		if(f.length() == 4) {
+			
 			try {
-		        int d = Integer.parseInt(f);
-		    } catch (NumberFormatException | NullPointerException nfe) {
-		    	System.out.println("The credit card is inValid");
-		        return false;
+				Connection myConn = DriverManager.getConnection(
+			               "jdbc:mysql://localhost:3306/cs370?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",
+			               "root", "tashah1948");
+				Statement myStmt = myConn.createStatement();
+				
+				
+				ResultSet myRs = myStmt.executeQuery("select * from cardholders");
+				while (myRs.next()) {
+					if (myRs.getString("cardNumber").equals(f)) {
+						System.out.println("card exists");
+						return true;
+					} else return false;
+				} 
+		    } catch (Exception exc) {
+				exc.printStackTrace();
 		    }
-		return true;
+			
+			
+			return false;
+		}else return false;
+			
+	}
+	
+	public static boolean activate(Integer cCard, String user, String pass) {
+		try {
+			Connection myConn = DriverManager.getConnection(
+		               "jdbc:mysql://localhost:3306/cs370?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",
+		               "root", "tashah1948");
+			Statement myStmt = myConn.createStatement();
+			String query = "insert into users values (?, ?, ?)";
+			PreparedStatement preparedStmt = myConn.prepareStatement(query);
+		     preparedStmt.setInt (1, cCard);
+		     preparedStmt.setString (2, user);
+		     preparedStmt.setString   (3, pass);
+		     preparedStmt.execute();
+		     myStmt.executeUpdate("update cardholders set activated = 1 where cardNumber =" + cCard +";");
+		     myConn.close();
+		     return true;
+
+		     
+		     
+			
+	    } catch (Exception exc) {
+	        System.err.println("Got an exception!");
+	        System.err.println(exc.getMessage());
+	        return false;
+	    }
+		
 	}
 
 }
