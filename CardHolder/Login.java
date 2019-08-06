@@ -116,6 +116,10 @@ public class Login extends JFrame {
 						loginMsg.setText("That password is incorrect!");
 					} else {
 						loginMsg.setText("Logged in successfully!");
+						String cCard = getCardFromUser(user);
+						Account acnt = new Account(cCard);
+						acnt.setVisible(true);
+						dispose();
 						
 					}
 			
@@ -177,16 +181,36 @@ public class Login extends JFrame {
 					myConn.close();
 					break;
 				};
-				
 			}
 			myConn.close();
 		} catch (Exception exc) {
 			exc.printStackTrace();
- 
 		}
-		
-
 		return status;
 	}
+	
+	public String getCardFromUser(String user) {
+		String card = "";
+		
+		try {
+			Connection myConn = DriverManager.getConnection(
+		               "jdbc:mysql://localhost:3306/cs370",
+		               "root", "tashah1948");
+			Statement myStmt = myConn.createStatement();
+			
+			
+			ResultSet myRs = myStmt.executeQuery("select * from users where user = '" + user + "';");
+			myRs.next();
+			card = myRs.getString("card_number");
+			myConn.close();
+			return card;
+		} catch (Exception exc) {
+	        System.err.println("Got an exception!");
+	        System.err.println(exc.getMessage());
+		}
+		return card;
+	}
+	
+	
 	
 }

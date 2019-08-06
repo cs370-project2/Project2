@@ -30,7 +30,7 @@ public class Account extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Account frame = new Account();
+					Account frame = new Account("2255");
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -42,9 +42,11 @@ public class Account extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Account() {
+
+	
+public Account(String card) {
 		
-		String card = "2255";
+		//Integer card = 2255;
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(200, 200, 601, 599);
@@ -82,11 +84,12 @@ public class Account extends JFrame {
 		JTextArea textArea_1 = new JTextArea();
 		textArea_1.setEditable(false);
 		textArea_1.setBounds(29, 454, 525, 63);
+		textArea_1.setText(payments(card));
 		contentPane.add(textArea_1);
 		
 		JLabel payments = new JLabel("Payments :");
 		payments.setFont(new Font("Sylfaen", Font.PLAIN, 16));
-		payments.setBounds(29, 429, 71, 14);
+		payments.setBounds(29, 429, 81, 14);
 		contentPane.add(payments);
 		
 		JButton viewAll = new JButton("View All");
@@ -97,69 +100,9 @@ public class Account extends JFrame {
 		makeAPayment.setBounds(421, 526, 133, 23);
 		makeAPayment.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				MakeAPayment map = new MakeAPayment();
+				MakeAPayment map = new MakeAPayment(card);
 				map.setVisible(true);
-			}
-		});
-		//contentPane.add(makeAPayment);
-	}
-	
-public Account(String card) {
-		
-		//Integer card = 2255;
-		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(200, 200, 601, 599);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
-		
-		JTextArea top = new JTextArea();
-		top.setEditable(false);
-		top.setBounds(29, 53, 525, 97);
-		top.setText(topInfo(card));
-		contentPane.add(top);
-		
-		JTextArea textArea = new JTextArea();
-		textArea.setEditable(false);
-		textArea.setBounds(29, 187, 525, 228);
-		contentPane.add(textArea);
-		
-		JLabel lblAccountStatement = new JLabel("Account Statement");
-		lblAccountStatement.setFont(new Font("Sylfaen", Font.PLAIN, 20));
-		lblAccountStatement.setBounds(29, 11, 210, 31);
-		contentPane.add(lblAccountStatement);
-		
-		JScrollBar scrollBar = new JScrollBar();
-		scrollBar.setBounds(537, 187, 17, 229);
-		contentPane.add(scrollBar);
-		
-		JLabel lblRecentPurchases = new JLabel("Recent Purchases :");
-		lblRecentPurchases.setFont(new Font("Sylfaen", Font.PLAIN, 16));
-		lblRecentPurchases.setBounds(29, 155, 120, 31);
-		contentPane.add(lblRecentPurchases);
-		
-		JTextArea textArea_1 = new JTextArea();
-		textArea_1.setEditable(false);
-		textArea_1.setBounds(29, 454, 525, 63);
-		contentPane.add(textArea_1);
-		
-		JLabel payments = new JLabel("Payments :");
-		payments.setFont(new Font("Sylfaen", Font.PLAIN, 16));
-		payments.setBounds(29, 429, 71, 14);
-		contentPane.add(payments);
-		
-		JButton viewAll = new JButton("View All");
-		viewAll.setBounds(465, 420, 89, 23);
-		contentPane.add(viewAll);
-		
-		JButton makeAPayment = new JButton("Make a Payment");
-		makeAPayment.setBounds(421, 526, 133, 23);
-		makeAPayment.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				MakeAPayment map = new MakeAPayment();
-				map.setVisible(true);
+				dispose();
 			}
 		});
 		contentPane.add(makeAPayment);
@@ -225,6 +168,34 @@ public Account(String card) {
 	        return exc.getMessage();
 	    }
 		
+		return info;
+	}
+	
+	public String payments(String card) {
+		String info = "Payment ID:\t Time:\t Amount:\n";
+		try {
+			Connection myConn = DriverManager.getConnection(
+		               "jdbc:mysql://localhost:3306/cs370",
+		               "root", "tashah1948");
+			Statement myStmt = myConn.createStatement();
+			String query = "SELECT * FROM payments where card_number = " + card + ";";
+			
+		     ResultSet rs = myStmt.executeQuery(query);
+		     rs.next();
+		     do {
+		    	 info = info + ""+ rs.getString("pay_id") + "\t";
+			     info = info + ""+ rs.getString("date") + "\t";
+			     info = info + "$"+ rs.getString("amount") + "\n" ;
+		     }	while (rs.next()); {
+		    	 
+		     }
+		     myConn.close();
+		     
+	    } catch (Exception exc) {
+	        System.err.println("Got an exception!");
+	        System.err.println(exc.getMessage());
+	        return exc.getMessage();
+	    }
 		return info;
 	}
 }
